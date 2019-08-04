@@ -1,47 +1,42 @@
 (function(doc) {
-    const output = doc.querySelector('.output');
-    const btn = doc.querySelector('.generate');
-    const input = doc.querySelector('.height-value');
+  const output = doc.querySelector('.output');
+  const btn = doc.querySelector('.generate');
+  const input = doc.querySelector('.height-value');
 
-    const fromNullable = x => x || 0;
+  const fromNullable = x => x || 0;
 
-    const compose = (f, g) => x => f(g(x));
+  const compose = (f, g) => x => f(g(x));
 
-    const last = arr => arr.slice(-1)[0];
+  const last = arr => arr.slice(-1)[0];
 
-    const sequentialArray = n => ([ ...Array(n).keys() ]);
-    
-    const pascalTriangle = (height, i = 0, prevTriangle = [[ 1 ]]) => {
-        const lastRow = last(prevTriangle);
+  const sequentialArray = n => ([ ...Array(n).keys() ]);
+  
+  const pascalTriangle = (height, i = 0, prevTriangle = [[ 1 ]]) => {
+    const lastRow = last(prevTriangle);
 
-        const newRowLength = prevTriangle.length + 1;
-     
-        const newRow = sequentialArray(newRowLength).map((e, i) => fromNullable(lastRow[i - 1]) + fromNullable(lastRow[i]));
-     
-        const newTriangle = [ ...prevTriangle, newRow ];
-     
-        return i === height ? newTriangle : pascalTriangle(height, i + 1, newTriangle)
-    }
+    const newRowLength = prevTriangle.length + 1;
+  
+    const newRow = sequentialArray(newRowLength).map((e, i) => fromNullable(lastRow[i - 1]) + fromNullable(lastRow[i]));
+  
+    const newTriangle = [ ...prevTriangle, newRow ];
+  
+    return i === height ? newTriangle : pascalTriangle(height, i + 1, newTriangle)
+  }
 
-    const safeTriangleGenerator = compose(pascalTriangle, parseInt);
+  const safeTriangleGenerator = compose(pascalTriangle, parseInt);
 
-    const generateHTML = (tag, className) => content => `<${tag} class="${className}">${content}</${tag}>`;
+  btn.addEventListener('click', () => {
+    const triangle = safeTriangleGenerator(input.value);
 
-    const mapAndJoin = fn => arr => [].map.call(arr, fn).join('');
-
-    const generateCell = generateHTML('span', 'cell');
-
-    const generateRow = generateHTML('div', 'row');
-
-    const matrixToCells = mapAndJoin(generateCell);
-
-    const arrayToRows = mapAndJoin(generateRow);
-
-    btn.addEventListener('click', () => {
-        const triangle = safeTriangleGenerator(input.value);
-
-        const cells = triangle.map(matrixToCells);
-    
-        output.innerHTML = arrayToRows(cells);
-    });
+    output.innerHTML = triangle
+      .map(
+        row =>
+          row.reduce(
+            (acc, cell) => `${acc}<span class="cell">${cell}</span>`,''
+          )
+      )
+      .reduce(
+        (acc, row) => `${acc}<div class="row">${row}</div>`, ''
+      );
+  })
 })(document);
