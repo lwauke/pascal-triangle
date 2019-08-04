@@ -1,21 +1,47 @@
-const output = document.querySelector('.output');
-const btn = document.querySelector('.generate');
-const input = document.querySelector('.height-value');
+(function(doc) {
+    const output = doc.querySelector('.output');
+    const btn = doc.querySelector('.generate');
+    const input = doc.querySelector('.height-value');
 
-btn.addEventListener('click', () => {
-    const triangle = pascalTriangle(parseInt(input.value));
+    const fromNullable = x => x || 0;
 
-    output.innerHTML = triangle
-        .map(row => row.reduce((acc, cell) => `${acc}<span class="cell">${cell}</span>`,''))
-        .reduce((acc, row) => `${acc}<div class="row">${row}</div>`, '')
-})
+    const compose = (f, g) => x => f(g(x));
 
-var pascalTriangle = (height, i = 0, actualTriangle = [[ 1 ]]) => {
-    const lastRow = actualTriangle.slice(-1)[0];
- 
-    const newRow = [ ...Array(actualTriangle.length + 1).keys() ].map((e, i) => ((lastRow[i - 1] || 0) + (lastRow[i] || 0)))
- 
-    const newTriangle = [ ...actualTriangle, newRow ];
- 
-    return i === height ? newTriangle : pascalTriangle(height, i + 1, newTriangle)
- }
+    const last = arr => arr.slice(-1)[0];
+
+    const sequentialArray = n => ([ ...Array(n).keys() ]);
+    
+    const pascalTriangle = (height, i = 0, prevTriangle = [[ 1 ]]) => {
+        const lastRow = last(prevTriangle);
+
+        const newRowLength = prevTriangle.length + 1;
+     
+        const newRow = sequentialArray(newRowLength).map((e, i) => fromNullable(lastRow[i - 1]) + fromNullable(lastRow[i]));
+     
+        const newTriangle = [ ...prevTriangle, newRow ];
+     
+        return i === height ? newTriangle : pascalTriangle(height, i + 1, newTriangle)
+    }
+
+    const safeTriangleGenerator = compose(pascalTriangle, parseInt);
+
+    const generateHTML = (tag, className) => content => `<${tag} class="${className}">${content}</${tag}>`;
+
+    const mapAndJoin = fn => arr => [].map.call(arr, fn).join('');
+
+    const generateCell = generateHTML('span', 'cell');
+
+    const generateRow = generateHTML('div', 'row');
+
+    const matrixToCells = mapAndJoin(generateCell);
+
+    const arrayToRows = mapAndJoin(generateRow);
+
+    btn.addEventListener('click', () => {
+        const triangle = safeTriangleGenerator(input.value);
+
+        const cells = triangle.map(matrixToCells);
+    
+        output.innerHTML = arrayToRows(cells);
+    });
+})(document);
