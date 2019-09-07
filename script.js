@@ -2,31 +2,46 @@
   const output = doc.querySelector('.output');
   const btn = doc.querySelector('.generate');
   const input = doc.querySelector('.height-value');
+  const msg = doc.querySelector('.msg');
 
-  const fromNullable = x => x || 0;
+  const limit = 800;
+  const errMsg = `Can't calc: type a value smaller than ${limit} (work in progress: optimization)`;
 
-  const compose = (f, g) => x => f(g(x));
+  const showMessage = text => {
+    msg.classList.remove('hidden');
+    msg.textContent = text;
+  }
+
+  const hideMessage = () => msg.classList.add('hidden')
 
   const last = arr => arr.slice(-1)[0];
-
-  const sequentialArray = n => ([ ...Array(n).keys() ]);
   
-  const pascalTriangle = (height, i = 0, prevTriangle = [[ 1 ]]) => {
+  const pascalTriangle = (height, prevTriangle = [[ 1 ]]) => {
     const lastRow = last(prevTriangle);
 
     const newRowLength = prevTriangle.length + 1;
+
+    const shiftLeft = [0, ...lastRow];
+    const shiftRight = [...lastRow, 0];
   
-    const newRow = sequentialArray(newRowLength).map((e, i) => fromNullable(lastRow[i - 1]) + fromNullable(lastRow[i]));
+    const newRow = shiftLeft.map((n, i) => n + shiftRight[i]);
   
     const newTriangle = [ ...prevTriangle, newRow ];
   
-    return i === height ? newTriangle : pascalTriangle(height, i + 1, newTriangle)
+    return newRowLength === height ? newTriangle : pascalTriangle(height, newTriangle)
   }
 
-  const safeTriangleGenerator = compose(pascalTriangle, parseInt);
-
   btn.addEventListener('click', () => {
-    const triangle = safeTriangleGenerator(input.value);
+    const rows = parseInt(input.value);
+
+    if(rows > limit) {
+      output.innerHTML = '';
+      return showMessage(errMsg);
+    }
+
+    hideMessage();
+
+    const triangle = pascalTriangle(rows);
 
     output.innerHTML = triangle
       .map(
