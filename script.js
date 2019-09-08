@@ -16,17 +16,27 @@
 
   const last = arr => arr.slice(-1)[0];
   
-  const pascalTriangle = (height, prevTriangle = [[ 1 ]]) => {
+  function pascalTriangle(height, prevTriangle = [[ 1 ]]) {
+    this.cache = this.cache || {};    
+
     const lastRow = last(prevTriangle);
 
     const newRowLength = prevTriangle.length + 1;
 
-    const shiftLeft = [0, ...lastRow];
-    const shiftRight = [...lastRow, 0];
+    let newTriangle;
+    
+    if(this.cache[newRowLength] !== undefined) {
+      newTriangle = this.cache[newRowLength];
+    } else {
+      const shiftLeft = [0, ...lastRow];
+      const shiftRight = [...lastRow, 0];
+    
+      const newRow = shiftLeft.map((n, i) => n + shiftRight[i]);
+    
+      newTriangle = [ ...prevTriangle, newRow ];
   
-    const newRow = shiftLeft.map((n, i) => n + shiftRight[i]);
-  
-    const newTriangle = [ ...prevTriangle, newRow ];
+      this.cache[newRowLength] =  newTriangle;
+    }
   
     return newRowLength === height ? newTriangle : pascalTriangle(height, newTriangle)
   }
